@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  data:
+    container_name: sqlserver
+    image: mcr.microsoft.com/mssql/server
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=yourStrongPassword12#$
+    volumes:
+      - sqldata:/var/opt/mssql
+    networks:
+      - mynetwork
+    restart: on-failure
+
+  gateway:
+    container_name: gateway
+    image: rosenspiridonov/storeapi
+    build:
+        dockerfile: ./server/Store.Api/Dockerfile
+    ports:
+      - "5500:80"
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=Store;User Id=sa;Password=yourStrongPassword12#$;MultipleActiveResultSets=true;encrypt=False
+    volumes:
+      - data-protection:/root/.aspnet/DataProtection-Keys
+    networks:
+      - mynetwork
+    depends_on:
+      - data
+    restart: on-failure
+    
+networks:
+  mynetwork:
+
+volumes:
+  sqldata:
+  data-protection:
