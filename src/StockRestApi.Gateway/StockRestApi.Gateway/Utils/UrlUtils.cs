@@ -32,6 +32,7 @@ public class UrlUtils
 
     public static string CleanUrl(string catchAll)
     {
-        return catchAll.Replace("api", "").Split("?=")[0];
+        // Remove the 'api' starting keyword from the url, and remove any query params.
+        return catchAll.Replace("api", "").Split("?")[0];
     }
 }
