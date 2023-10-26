@@ -1,4 +1,6 @@
+using System.Net;
 using Cloudtoid.UrlPattern;
+using StockRestApi.Gateway.Model;
 
 namespace StockRestApi.Gateway.Utils;
 
@@ -26,7 +28,7 @@ public class UrlUtils
         }
 
         // If we got to here, this means that we did not find the needed route.
-        throw new Exception("Could not find route");
+        throw new GatewayException("Not found", HttpStatusCode.NotFound);
     }
 
     public static string CleanUrl(string catchAll)
