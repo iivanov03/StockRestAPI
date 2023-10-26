@@ -23,7 +23,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
-// Add our custom middleware.
+// Add our custom middlewares.
 app.UseMiddleware<GatewayMiddleware>();
 
 app.MapControllers();
