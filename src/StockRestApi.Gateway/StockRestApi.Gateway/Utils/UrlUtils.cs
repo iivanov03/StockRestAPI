@@ -6,7 +6,6 @@ public class UrlUtils
 {
     public static Model.Route GetRouteSettings(string url, List<Model.Route> routes)
     {
-        Console.WriteLine(url);
         var engine = new PatternEngine();
         foreach (var route in routes)
         {
