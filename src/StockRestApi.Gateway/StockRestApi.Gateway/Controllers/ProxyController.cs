@@ -19,6 +19,7 @@ public class ProxyController : ControllerBase
     [Route("/{*catchAll}")]
     public Object Proxy(string catchAll)
     {
+        // We wil get the request url from the HttpContext, as we need some place that we can rely on to return the url in a constant format, So we can parse it properly.
         var url = HttpContext.Request.Path.ToUriComponent();
         // We will gather all of the routes here.
         var settingsRoutes = _configuration.GetSection("Routes").Get<List<Route>>();
