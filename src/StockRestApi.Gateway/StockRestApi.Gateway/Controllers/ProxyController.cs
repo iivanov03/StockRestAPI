@@ -34,5 +34,4 @@ public class ProxyController
 
         return route;
     }
-
 }

@@ -6,6 +6,7 @@ public class UrlUtils
 {
     public static Model.Route GetRouteSettings(string url, List<Model.Route> routes)
     {
+        Console.WriteLine(url);
         var engine = new PatternEngine();
         foreach (var route in routes)
         {
@@ -16,8 +17,10 @@ public class UrlUtils
                 engine.Match(route.Url, url);
                 return route;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                // For logging purposes.
+                Console.WriteLine(e);
                 // Just ignore, we don't need to do anything here...
             }
 
@@ -29,6 +32,6 @@ public class UrlUtils
 
     public static string CleanUrl(string catchAll)
     {
-        return catchAll.Replace("api/", "").Split("?=")[0];
+        return catchAll.Replace("api", "").Split("?=")[0];
     }
 }
