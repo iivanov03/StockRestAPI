@@ -32,7 +32,7 @@ public class UrlUtils
 
     public static string CleanUrl(string catchAll)
     {
-        // Remove the 'api' starting keyword from the url, and remove any query params.
-        return catchAll.Replace("/api", "").Split("?")[0];
+        // Remove the 'api' starting keyword from the url, and remove any query params, remove the ending trailing slash.
+        return catchAll.Replace("/api", "").Split("?")[0].TrimEnd('/');
     }
 }

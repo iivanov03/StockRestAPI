@@ -15,7 +15,7 @@ public class GatewayMiddleware : IMiddleware
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         var path = UrlUtils.CleanUrl(context.Request.Path.ToUriComponent());
-        var routes = this._configuration.GetSection("Routesc").Get<List<Route>>();
+        var routes = this._configuration.GetSection("Routes").Get<List<Route>>();
         if (routes == null)
         {
             throw new Exception("Hello world !");
