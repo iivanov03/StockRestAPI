@@ -1,7 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Text;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using StockRestApi.Gateway.Model;
 using StockRestApi.Gateway.Utils;
 using Route = StockRestApi.Gateway.Model.Route;
@@ -19,11 +22,11 @@ public class GatewayMiddleware : IMiddleware
 
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
-       
         try
         {
             var path = UrlUtils.CleanUrl(context.Request.Path.ToUriComponent());
             var routes = this._configuration.GetSection("Routes").Get<List<Route>>();
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
             if (routes == null)
             {
                 throw new Exception("Could not find the Routes config.");
@@ -32,6 +35,7 @@ public class GatewayMiddleware : IMiddleware
             var route = UrlUtils.GetRouteSettings(path, routes);
             // Validate that we are calling the proper http method.
             ValidateHttpMethod(context.Request.Method, route.Methods);
+            ValidateJwtToken(route.Access, token);
             // Call the next route.
             await next.Invoke(context);
         }
@@ -43,9 +47,44 @@ public class GatewayMiddleware : IMiddleware
         }
         catch (Exception exception)
         {
-            context.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
+            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
             await context.Response.WriteAsJsonAsync(new { message = exception.Message });
             await context.Response.CompleteAsync();
+        }
+    }
+
+    private void ValidateJwtToken(Access access, string? token)
+    {
+        if (access == Access.Private)
+        {
+            if (token == null)
+            {
+                throw new GatewayException("Unauthorized", HttpStatusCode.Unauthorized);
+            }
+
+            var configSecret = _configuration["JWT_SECRET"];
+            if (configSecret == null)
+            {
+                throw new GatewayException("Internal server error", HttpStatusCode.InternalServerError);
+            }
+
+            var jwtKey = Encoding.ASCII.GetBytes(configSecret);
+            var validator = new JwtSecurityTokenHandler();
+            try
+            {
+                validator.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(jwtKey),
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+            }
+            catch
+            {
+                throw new GatewayException("Unauthorized", HttpStatusCode.Unauthorized);
+            }
         }
     }
 

@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using StockRestApi.Gateway.Model;
 using StockRestApi.Gateway.Utils;
 using Route = StockRestApi.Gateway.Model.Route;
 
@@ -29,13 +28,17 @@ public class ProxyController : ControllerBase
         }
         
         var cleanUrl = UrlUtils.CleanUrl(url);
-        
         // We are doing this basically, so we don't hit apis outside of our network.
-        // This may be unneeded when we implement the middleware, but for now we are doing it here.
         var route = UrlUtils.GetRouteSettings(cleanUrl, settingsRoutes);
         
         //TODO: Call the actual microservice.
 
         return route;
     }
+
+    // private Object CallMicrosevice()
+    // {
+    //     var client = new HttpClient();
+    //     client.PostAsJsonAsync()
+    // }
 }

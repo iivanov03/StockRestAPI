@@ -17,9 +17,8 @@ services:
 
   gateway:
     container_name: gateway
-    image: rosenspiridonov/storeapi
     build:
-        dockerfile: ./server/Store.Api/Dockerfile
+        dockerfile: StockRestApi.Gateway/Dockerfile 
     ports:
       - "5500:80"
     environment:
