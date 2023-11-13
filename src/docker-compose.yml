@@ -1,11 +1,9 @@
 version: '3.9'
 
 services:
-  data:
-    container_name: sqlserver
+  sql_server:
+    container_name: sql_server
     image: mcr.microsoft.com/mssql/server
-    ports:
-      - "1433:1433"
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=yourStrongPassword12#$
@@ -22,14 +20,26 @@ services:
         dockerfile: Dockerfile
     ports:
       - "5500:80"
-    environment:
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=Store;User Id=sa;Password=yourStrongPassword12#$;MultipleActiveResultSets=true;encrypt=False
     volumes:
       - data-protection:/root/.aspnet/DataProtection-Keys
     networks:
       - mynetwork
     depends_on:
-      - data
+      - sql_server
+    restart: on-failure
+
+  accounts:
+    container_name: accounts
+    build:
+      context: StockRestApi.Accounts/
+      dockerfile: Dockerfile
+    volumes:
+      - data-protection:/root/.aspnet/DataProtection-Keys
+    networks:
+      - mynetwork
+    depends_on:
+      - sql_server
+      - gateway
     restart: on-failure
     
 networks:
