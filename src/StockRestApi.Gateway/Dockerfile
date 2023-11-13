@@ -1,22 +1,17 @@
-#See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
+ARG CSPROJ_FILE
 
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
-WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+FROM mcr.microsoft.com/dotnet/sdk:7.0 as build
+WORKDIR /source
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
-WORKDIR /src
-COPY ["StockRestApi.Gateway/StockRestApi.Gateway/StockRestApi.Gateway.csproj", "StockRestApi.Gateway/"]
-RUN dotnet restore "StockRestApi.Gateway/StockRestApi.Gateway.csproj"
 COPY . .
-WORKDIR "/src/StockRestApi.Gateway"
-RUN dotnet build "StockRestApi.Gateway.csproj" -c Release -o /app/build
 
-FROM build AS publish
-RUN dotnet publish "StockRestApi.Gateway.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet restore "./StockRestApi.Gateway/StockRestApi.Gateway.csproj" --disable-parallel
+RUN dotnet publish "./StockRestApi.Gateway/StockRestApi.Gateway.csproj" -c release -o /app --no-restore
 
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/sdk:7.0
 WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "StockRestApi.Gateway.dll"]
+COPY --from=build /app ./
+
+EXPOSE 5000
+
+ENTRYPOINT [ "dotnet", "StockRestApi.Gateway.dll"]

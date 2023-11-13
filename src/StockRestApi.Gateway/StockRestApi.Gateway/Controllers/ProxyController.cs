@@ -9,10 +9,12 @@ namespace StockRestApi.Gateway.Controllers;
 public class ProxyController : ControllerBase
 {
     private IConfiguration _configuration;
+    private readonly HttpClient _httpClient;
 
-    public ProxyController(IConfiguration configuration)
+    public ProxyController(IConfiguration configuration, HttpClient httpClient)
     {
         this._configuration = configuration;
+        this._httpClient = httpClient;
     }
 
     [Route("/{*catchAll}")]
@@ -38,7 +40,6 @@ public class ProxyController : ControllerBase
 
     // private Object CallMicrosevice()
     // {
-    //     var client = new HttpClient();
-    //     client.PostAsJsonAsync()
+    //    
     // }
 }

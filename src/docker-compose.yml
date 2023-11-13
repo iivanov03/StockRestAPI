@@ -18,7 +18,8 @@ services:
   gateway:
     container_name: gateway
     build:
-        dockerfile: StockRestApi.Gateway/Dockerfile 
+        context: StockRestApi.Gateway/
+        dockerfile: Dockerfile
     ports:
       - "5500:80"
     environment:
