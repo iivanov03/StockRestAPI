@@ -90,8 +90,10 @@ public class GatewayMiddleware : IMiddleware
 
     private void ValidateHttpMethod(string method, List<string> allowedMethods)
     {
-        foreach (var allowedMethod in allowedMethods)
+        Console.WriteLine("method " + method);
+            foreach (var allowedMethod in allowedMethods)
         {
+            Console.WriteLine("allowed method" + allowedMethod);
             if (method != allowedMethod)
             {
                 throw new GatewayException("Method not allowed", HttpStatusCode.MethodNotAllowed);

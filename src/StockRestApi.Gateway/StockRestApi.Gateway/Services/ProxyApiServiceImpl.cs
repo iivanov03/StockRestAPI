@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Mime;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
@@ -22,6 +23,11 @@ public class ProxyApiServiceImpl : ProxyApiService
     {
         foreach (var header in headerDictionary)
         {
+            if (header.Key.ToLower() == "content-type")
+            {
+                
+            }
+
             // Add without validation, as we don't really care what headers are sent here, we are only a proxy...
             requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
         }
@@ -33,13 +39,13 @@ public class ProxyApiServiceImpl : ProxyApiService
         var message = new HttpRequestMessage();
         message.Method = method;
         message.RequestUri = new Uri(url);
-        message.Content = new StringContent("application/json");
         this.addHeaders(headers, message);
 
         if (!requestBody.IsNullOrEmpty())
         {
-            message.Content = new StringContent(JsonSerializer.Serialize(requestBody));
+            message.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
         }
+        
         var response = await _httpClient.SendAsync(message);
         if (response.StatusCode != HttpStatusCode.OK)
         {

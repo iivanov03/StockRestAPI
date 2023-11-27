@@ -1,11 +1,12 @@
-using System.Collections.Immutable;
 using System.Net;
 using System.Text;
-using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using StockRestApi.Gateway.Model;
 using StockRestApi.Gateway.Services;
 using StockRestApi.Gateway.Utils;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 using Route = StockRestApi.Gateway.Model.Route;
 
 namespace StockRestApi.Gateway.Controllers;
@@ -26,6 +27,7 @@ public class ProxyController : ControllerBase
     [Route("/{*catchAll}")]
     public async Task<Object> Proxy(string catchAll)
     {
+        Console.WriteLine("Here");
         // We wil get the request url from the HttpContext, as we need some place that we can rely on to return the url in a constant format, So we can parse it properly.
         var url = HttpContext.Request.Path.ToUriComponent();
         // We will gather all of the routes here.
@@ -62,6 +64,10 @@ public class ProxyController : ControllerBase
             throw new GatewayException("Server error", HttpStatusCode.InternalServerError);
         }
 
-        return response;
+
+        // The default asp JSON serializer does not work well with JObject/dynamic types.
+        // So we will Deserialize the dynamic json string with Json.NET and then serialize it again with the same package, customly.
+        var deserialize = JsonConvert.DeserializeObject(response);
+        return Content(JsonConvert.SerializeObject(deserialize), "application/json");
     }
 }
