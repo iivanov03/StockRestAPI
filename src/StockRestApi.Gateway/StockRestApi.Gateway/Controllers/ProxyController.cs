@@ -1,4 +1,10 @@
+using System.Collections.Immutable;
+using System.Net;
+using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using StockRestApi.Gateway.Model;
+using StockRestApi.Gateway.Services;
 using StockRestApi.Gateway.Utils;
 using Route = StockRestApi.Gateway.Model.Route;
 
@@ -9,16 +15,16 @@ namespace StockRestApi.Gateway.Controllers;
 public class ProxyController : ControllerBase
 {
     private IConfiguration _configuration;
-    private readonly HttpClient _httpClient;
+    private ProxyApiService _proxyApiService;
 
-    public ProxyController(IConfiguration configuration, HttpClient httpClient)
+    public ProxyController(IConfiguration configuration, ProxyApiService proxyApiService)
     {
         this._configuration = configuration;
-        this._httpClient = httpClient;
+        this._proxyApiService = proxyApiService;
     }
 
     [Route("/{*catchAll}")]
-    public Object Proxy(string catchAll)
+    public async Task<Object> Proxy(string catchAll)
     {
         // We wil get the request url from the HttpContext, as we need some place that we can rely on to return the url in a constant format, So we can parse it properly.
         var url = HttpContext.Request.Path.ToUriComponent();
@@ -28,18 +34,34 @@ public class ProxyController : ControllerBase
         {
             throw new Exception("Could not find route settings.");
         }
-        
+
         var cleanUrl = UrlUtils.CleanUrl(url);
         // We are doing this basically, so we don't hit apis outside of our network.
         var route = UrlUtils.GetRouteSettings(cleanUrl, settingsRoutes);
         
-        //TODO: Call the actual microservice.
+        var request = HttpContext.Request;
 
-        return route;
+        var reqStr = "";
+
+        using (StreamReader reader
+               = new StreamReader(request.Body, Encoding.UTF8, true, 1024, true))
+        {
+            reqStr = await reader.ReadToEndAsync();
+        }
+
+        var microservice = UrlUtils.createMicroserviceUrl(route, url);
+        
+        var response = await _proxyApiService.call(
+            microservice,
+            new HttpMethod(HttpContext.Request.Method),
+            Request.Headers.ToDictionary(a => a.Key, a => a.Value), 
+            reqStr);
+
+        if (response == null)
+        {
+            throw new GatewayException("Server error", HttpStatusCode.InternalServerError);
+        }
+
+        return response;
     }
-
-    // private Object CallMicrosevice()
-    // {
-    //    
-    // }
 }

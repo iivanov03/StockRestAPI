@@ -1,6 +1,7 @@
 using System.Net;
 using Cloudtoid.UrlPattern;
 using StockRestApi.Gateway.Model;
+using Route = StockRestApi.Gateway.Model.Route;
 
 namespace StockRestApi.Gateway.Utils;
 
@@ -35,5 +36,10 @@ public class UrlUtils
     {
         // Remove the 'api' starting keyword from the url, and remove any query params, remove the ending trailing slash.
         return catchAll.Replace("/api", "").Split("?")[0].TrimEnd('/');
+    }
+
+    public static string createMicroserviceUrl(Route route, string url)
+    {
+        return $"http://{route.Host}{url}";
     }
 }

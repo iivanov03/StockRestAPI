@@ -9,4 +9,6 @@ public class Route
     
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public Access Access { get; set; }
+
+    public string Host { get; set; }
 }

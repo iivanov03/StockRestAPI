@@ -1,4 +1,5 @@
 version: '3.9'
+name: stock-rest-api
 
 services:
   sql_server:
@@ -18,8 +19,12 @@ services:
     build:
         context: StockRestApi.Gateway/
         dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_HTTP_PORT=https://+:443
+      - ASPNETCORE_URLS=http://+:80
     ports:
-      - "5500:80"
+      - "8080:80"
+      - "8088:443"
     volumes:
       - data-protection:/root/.aspnet/DataProtection-Keys
     networks:
@@ -33,6 +38,11 @@ services:
     build:
       context: StockRestApi.Accounts/
       dockerfile: Dockerfile
+  
+    environment:
+      - ASPNETCORE_HTTP_PORT=https://+:443
+      - ASPNETCORE_URLS=http://+:80
+  
     volumes:
       - data-protection:/root/.aspnet/DataProtection-Keys
     networks:
