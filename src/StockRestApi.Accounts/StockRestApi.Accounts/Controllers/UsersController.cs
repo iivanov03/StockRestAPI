@@ -6,6 +6,7 @@ using StockRestApi.Accounts.Models;
 using StockRestApi.Accounts.Services;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class AccountsController : ControllerBase
 {

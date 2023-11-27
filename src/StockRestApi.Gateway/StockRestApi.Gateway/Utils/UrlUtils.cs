@@ -42,4 +42,18 @@ public class UrlUtils
     {
         return $"http://{route.Host}{url}";
     }
+
+    public static List<string> getAllAvailableRouteMethods(Route route, List<Route> routes)
+    {
+        var allowedMethods = new List<string>();
+        foreach (var routeMethod in routes)
+        {
+            if (routeMethod.Url == route.Url)
+            {
+                allowedMethods.AddRange(routeMethod.Methods);
+            }
+        }
+
+        return allowedMethods;
+    }
 }

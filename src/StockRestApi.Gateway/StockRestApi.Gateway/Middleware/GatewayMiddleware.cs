@@ -32,9 +32,12 @@ public class GatewayMiddleware : IMiddleware
                 throw new Exception("Could not find the Routes config.");
             }
 
+
             var route = UrlUtils.GetRouteSettings(path, routes);
+            // We can have the same route listed different times, so we need to gather all the possible http methods for the route.
+            var routeMethods = UrlUtils.getAllAvailableRouteMethods(route, routes);
             // Validate that we are calling the proper http method.
-            ValidateHttpMethod(context.Request.Method, route.Methods);
+            ValidateHttpMethod(context.Request.Method, routeMethods);
             ValidateJwtToken(route.Access, token);
             // Call the next route.
             await next.Invoke(context);
@@ -90,14 +93,18 @@ public class GatewayMiddleware : IMiddleware
 
     private void ValidateHttpMethod(string method, List<string> allowedMethods)
     {
-        Console.WriteLine("method " + method);
-            foreach (var allowedMethod in allowedMethods)
+        var found = false;
+        foreach (var allowedMethod in allowedMethods)
         {
-            Console.WriteLine("allowed method" + allowedMethod);
             if (method != allowedMethod)
             {
-                throw new GatewayException("Method not allowed", HttpStatusCode.MethodNotAllowed);
+                found = true;
             }
+        }
+
+        if (!found)
+        {
+            throw new GatewayException("Method not allowed", HttpStatusCode.MethodNotAllowed);
         }
     }
 }
