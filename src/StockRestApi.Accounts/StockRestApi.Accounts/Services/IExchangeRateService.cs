@@ -15,7 +15,7 @@ public class ExchangeRateService : IExchangeRateService
 
             if (response.IsSuccessStatusCode)
             {
-                ExchangeRateApiResponse result = await response.Content.ReadAsAsync<ExchangeRateApiResponse>();
+                ExchangeRateApiResponse result = await response.Content.ReadFromJsonAsync<ExchangeRateApiResponse>();
                 return result.Rates[toCurrency];
             }
 

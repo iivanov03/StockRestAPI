@@ -19,7 +19,6 @@ public class AuthenticateResponse
         LastName = user.LastName;
         Username = user.Username;
         Balance = user.Balance;
-        Currency = user.Currency;
         Token = token;
     }
 }

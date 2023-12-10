@@ -30,6 +30,7 @@ namespace StockRestApi.Database.Data
             {
                 var context = serviceScope.ServiceProvider.GetService<ApplicationDbContext>();
                 context.Database.Migrate(); // Ensure the database is created
+                var userManager = serviceScope.ServiceProvider.GetService<UserManager<IdentityUser>>();
 
                 // Seed users
                 if (!context.Users.Any())
@@ -41,8 +42,15 @@ namespace StockRestApi.Database.Data
                         // Add more users as needed
                     };
 
-                    context.Users.AddRange(users);
-                    context.SaveChanges();
+                    foreach (var user in users)
+                    {
+                        var result = userManager.CreateAsync(user, "password123").Result;
+                        if (!result.Succeeded)
+                        {
+                            // Handle the error situation if the user couldn't be created.
+                            // Log the error or throw an exception
+                        }
+                    }
                 }
 
                 // Seed stocks

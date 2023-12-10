@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Configuration;
+
 using StockRestApi.Accounts.Authorization;
 using StockRestApi.Accounts.Helpers;
 using StockRestApi.Accounts.Services;
@@ -8,8 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 //builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-//builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGen();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 
 {
@@ -19,7 +21,8 @@ var builder = WebApplication.CreateBuilder(args);
 
     // configure strongly typed settings object
     services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
-
+    var apiSettings = builder.Configuration.GetSection("Api").Get<ApiSettings>();
+    builder.Services.AddSingleton(apiSettings);
     // configure DI for application services
     services.AddScoped<IJwtUtils, JwtUtils>();
     services.AddScoped<IUserService, UserService>();
@@ -29,11 +32,11 @@ var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
-//    app.UseSwagger();
-//    app.UseSwaggerUI();
-//}
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 //app.UseHttpsRedirection();
 
@@ -54,6 +57,6 @@ var app = builder.Build();
     app.MapControllers();
 }
 
-app.Run("http://localhost:4000");
+app.Run();
 
 //app.Run();

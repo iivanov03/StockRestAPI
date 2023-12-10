@@ -15,12 +15,12 @@ namespace StockRestApi.Database.Services
             _userManager = userManager;
         }
 
-        public async Task<bool> RegisterAsync(string username, string email, string password)
+        public async Task<string> RegisterAsync(string username, string email, string password)
         {
             var existingUser = await _userManager.FindByNameAsync(username);
             if (existingUser != null)
             {
-                return false;
+                return null;
             }
 
             var user = new IdentityUser
@@ -31,20 +31,25 @@ namespace StockRestApi.Database.Services
 
             await _userManager.CreateAsync(user, password);
 
-            return true;
+            return user.Id;
         }
 
-        public async Task<bool> DoesUserExistAsync(string username, string password)
+        public async Task<string> GetUserId(string username, string password)
         {
             var existingUser = await _userManager.FindByNameAsync(username);
 
             if (existingUser == null)
             {
-                return false;
+                return null;
             }
 
             var isPasswordValid = await _userManager.CheckPasswordAsync(existingUser, password);
-            return isPasswordValid;
+            if (!isPasswordValid)
+            {
+                return null;
+            }
+
+            return existingUser.Id;
         }
     }
 }

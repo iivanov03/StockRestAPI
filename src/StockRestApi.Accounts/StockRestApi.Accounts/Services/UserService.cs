@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Text;
+
+using Newtonsoft.Json;
+
 using StockRestApi.Accounts.Authorization;
 using StockRestApi.Accounts.Entities;
+using StockRestApi.Accounts.Helpers;
 using StockRestApi.Accounts.Models;
 using StockRestApi.Accounts.Models;
 
@@ -8,37 +13,50 @@ namespace StockRestApi.Accounts.Services;
 
 public interface IUserService
 {
-    Task<AuthenticateResponse> Authenticate(AuthenticateRequest model);
+    Task<string> Authenticate(AuthenticateRequest model);
+    Task<bool> Register(RegisterModel model);
     Task<IEnumerable<User>> GetAll();
-    Task<User> GetById(int id);
-    Task Create(CreateRequest model);
-    Task Update(int id, UpdateRequest model);
-    Task Delete(int id);
+    User? GetById(int id);
+    //Task Create(CreateRequest model);
+    //Task Update(int id, UpdateRequest model);
+    //Task Delete(int id);
 }
 
 public class UserService : IUserService
 {
     private List<User> _users = new List<User>
     {
-        new User { Id = 1, FirstName = "Test", LastName = "User", Username = "test", Password = "test", Balance = 1500.0, Currency = "USD" }
+        new User { Id = 1, FirstName = "Test", LastName = "User", Username = "test", Password = "test", Balance = 1500.0 }
     };
 
     private readonly IJwtUtils _jwtUtils;
 
-    public UserService(IJwtUtils jwtUtils)
+    private readonly string _apiRoot;
+
+    public UserService(IJwtUtils jwtUtils, ApiSettings apiSettings)
     {
         _jwtUtils = jwtUtils;
+        _apiRoot = apiSettings.Database;
     }
 
-    public AuthenticateResponse? Authenticate(AuthenticateRequest model)
+    public async Task<string> Authenticate(AuthenticateRequest model)
     {
-        var user = _users.SingleOrDefault(x => x.Username == model.Username && x.Password == model.Password);
+        var apiUrl = _apiRoot + "/api/User/getuserid";
+        var response = await CreatePostRequest(apiUrl, model);
 
-        if (user == null) return null;
+        if (!response.IsSuccessStatusCode) return null;
 
-        var token = _jwtUtils.GenerateJwtToken(user);
+        var userId = await response.Content.ReadAsStringAsync();
 
-        return new AuthenticateResponse(user, token);
+        var token = _jwtUtils.GenerateJwtToken(userId);
+        return token;
+    }
+
+    public async Task<bool> Register(RegisterModel model)
+    {
+        var apiUrl = _apiRoot + "/api/User/register";
+        var response = await CreatePostRequest(apiUrl, model);
+        return response.IsSuccessStatusCode;
     }
 
     public IEnumerable<User> GetAll()
@@ -51,62 +69,76 @@ public class UserService : IUserService
         return _users.FirstOrDefault(x => x.Id == id);
     }
 
-    public async Task Create(CreateRequest model)
+    private async Task<HttpResponseMessage> CreatePostRequest(string url, object data)
     {
-        if (await _userRepository.GetByEmail(model.Email!) != null)
-            throw new AppException("User with the email '" + model.Email + "' already exists");
-
-        var user = _mapper.Map<User>(model);
-
-        user.PasswordHash = BCrypt.HashPassword(model.Password);
-
-        await _userRepository.Create(user);
-    }
-
-    public async Task Update(int id, UpdateRequest model)
-    {
-        var user = await _userRepository.GetById(id);
-
-        if (user == null)
-            throw new KeyNotFoundException("User not found");
-
-        var emailChanged = !string.IsNullOrEmpty(model.Email) && user.Email != model.Email;
-        if (emailChanged && await _userRepository.GetByEmail(model.Email!) != null)
-            throw new AppException("User with the email '" + model.Email + "' already exists");
-
-        if (!string.IsNullOrEmpty(model.Password))
-            user.PasswordHash = BCrypt.HashPassword(model.Password);
-
-        _mapper.Map(model, user);
-
-        await _userRepository.Update(user);
-    }
-
-    public async Task Delete(int id)
-    {
-        await _userRepository.Delete(id);
-    }
-
-    public async Task AddMoney(int userId, double amount, string currency)
-    {
-        var user = await _userRepository.GetById(userId);
-
-        if (user == null)
-            throw new KeyNotFoundException("User not found");
-
-        if (currency != "USD")
+        using (var client = new HttpClient())
         {
-            double conversionRate = await _exchangeRateService.GetExchangeRate(currency, "USD");
+            var jsonData = JsonConvert.SerializeObject(data);
 
-            amount *= conversionRate;
+            var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
+
+            var response = await client.PostAsync(url, content);
+
+            return response;
         }
-
-        user.Balance += amount;
-
-        UpdateTier(user);
-
-        await _userRepository.Update(user);
     }
+
+    //public async Task Create(CreateRequest model)
+    //{
+    //    if (await _userRepository.GetByEmail(model.Email!) != null)
+    //        throw new AppException("User with the email '" + model.Email + "' already exists");
+
+    //    var user = _mapper.Map<User>(model);
+
+    //    user.PasswordHash = BCrypt.HashPassword(model.Password);
+
+    //    await _userRepository.Create(user);
+    //}
+
+    //public async Task Update(int id, UpdateRequest model)
+    //{
+    //    var user = await _userRepository.GetById(id);
+
+    //    if (user == null)
+    //        throw new KeyNotFoundException("User not found");
+
+    //    var emailChanged = !string.IsNullOrEmpty(model.Email) && user.Email != model.Email;
+    //    if (emailChanged && await _userRepository.GetByEmail(model.Email!) != null)
+    //        throw new AppException("User with the email '" + model.Email + "' already exists");
+
+    //    if (!string.IsNullOrEmpty(model.Password))
+    //        user.PasswordHash = BCrypt.HashPassword(model.Password);
+
+    //    _mapper.Map(model, user);
+
+    //    await _userRepository.Update(user);
+    //}
+
+    //public async Task Delete(int id)
+    //{
+    //    await _userRepository.Delete(id);
+    //}
+
+    //public async Task AddMoney(int userId, double amount, string currency)
+    //{
+    //    var user = await _userRepository.GetById(userId);
+
+    //    if (user == null)
+    //        throw new KeyNotFoundException("User not found");
+
+    //    if (currency != "USD")
+    //    {
+    //        double conversionRate = await _exchangeRateService.GetExchangeRate(currency, "USD");
+
+    //        amount *= conversionRate;
+    //    }
+
+    //    user.Balance += amount;
+
+    //    UpdateTier(user);
+
+    //    await _userRepository.Update(user);
+    //}
 
     private void UpdateTier(User user)
     {
@@ -120,5 +152,14 @@ public class UserService : IUserService
             user.Tier = "Bronze";
     }
 
+    Task<IEnumerable<User>> IUserService.GetAll()
+    {
+        throw new NotImplementedException();
+    }
+
+    //Task<User> IUserService.GetById(int id)
+    //{
+    //    throw new NotImplementedException();
+    //}
 }
 
