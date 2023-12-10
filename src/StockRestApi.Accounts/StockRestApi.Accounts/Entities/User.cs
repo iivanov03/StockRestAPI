@@ -9,7 +9,7 @@ public class User
     public string? LastName { get; set; }
     public string? Username { get; set; }
     public double? Balance { get; set; }
-    public string? Currency { get; set; }
+    public string Tier { get; set; }
 
     [JsonIgnore]
     public string? Password { get; set; }
