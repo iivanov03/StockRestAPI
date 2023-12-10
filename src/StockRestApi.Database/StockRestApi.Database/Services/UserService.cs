@@ -34,15 +34,17 @@ namespace StockRestApi.Database.Services
             return true;
         }
 
-        public async Task<bool> DoesUserExist(string email)
+        public async Task<bool> DoesUserExistAsync(string username, string password)
         {
-            var existingUser = await _userManager.FindByNameAsync(email);
-            if (existingUser != null )
+            var existingUser = await _userManager.FindByNameAsync(username);
+
+            if (existingUser == null)
             {
-                return true;
+                return false;
             }
 
-            return false;
+            var isPasswordValid = await _userManager.CheckPasswordAsync(existingUser, password);
+            return isPasswordValid;
         }
     }
 }

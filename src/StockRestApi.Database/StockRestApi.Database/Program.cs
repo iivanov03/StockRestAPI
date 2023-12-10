@@ -1,8 +1,12 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 
 using StockRestApi.Database.Data;
-using StockRestApi.Database.Data.Entities;
+using StockRestApi.Database.Repositories;
+using StockRestApi.Database.Repositories.Contracts;
+using StockRestApi.Database.Services;
+using StockRestApi.Database.Services.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +28,26 @@ builder.Services
 
 builder.Services.AddControllers();
 
+// Services
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
+
+// Repositories
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Database Service API",
+        Version = "v1"
+    });
+});
+
 var app = builder.Build();
+
+Seeder.SeedData(app);
 
 if (app.Environment.IsDevelopment())
 {

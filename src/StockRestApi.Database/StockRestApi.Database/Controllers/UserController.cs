@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
+using StockRestApi.Database.Models.Users;
 using StockRestApi.Database.Services.Contracts;
 
 namespace StockRestApi.Database.Controllers
@@ -17,20 +18,23 @@ namespace StockRestApi.Database.Controllers
         public async Task<IActionResult> Register(RegisterRequest model)
         {
             var succeeded = await _userService.RegisterAsync(model.Username, model.Email, model.Password);
-            if (!succeeded)
+            if (succeeded)
             {
-                return BadRequest("User exists");
+                return Ok("Registration successful");
             }
 
-            return Ok("Registration successful");
+            return BadRequest("User already exists");
         }
 
-
-        public class RegisterRequest
+        public async Task<IActionResult> DoesUserExist(LoginRequest model)
         {
-            public string Username { get; set; }
-            public string Email { get; set; }
-            public string Password { get; set; }
+            var doesEsist = await _userService.DoesUserExistAsync(model.Username, model.Password);
+            if (doesEsist)
+            {
+                return Ok();
+            }
+
+            return BadRequest("User does not exist");
         }
     }
 }

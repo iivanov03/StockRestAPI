@@ -12,28 +12,28 @@ services:
     volumes:
       - sqldata:/var/opt/mssql
     networks:
-      - mynetwork
+      - stockrestapi
     restart: on-failure
 
-  gateway:
-    container_name: gateway
-    image: rosenspiridonov/storeapi
+  database:
+    container_name: database
+    image: stockrestapidb
     build:
-        dockerfile: ./server/Store.Api/Dockerfile
+        dockerfile: ./StockRestApi.Database/StockRestApi.Database/Dockerfile
     ports:
       - "5500:80"
     environment:
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=Store;User Id=sa;Password=yourStrongPassword12#$;MultipleActiveResultSets=true;encrypt=False
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=StockRestApi1;User Id=sa;Password=yourStrongPassword12#$;MultipleActiveResultSets=true;encrypt=False
     volumes:
       - data-protection:/root/.aspnet/DataProtection-Keys
     networks:
-      - mynetwork
+      - stockrestapi
     depends_on:
       - data
     restart: on-failure
     
 networks:
-  mynetwork:
+  stockrestapi:
 
 volumes:
   sqldata:
